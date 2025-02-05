@@ -14,32 +14,3 @@ app.all("*", (req, res) => {
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
-
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
-// joe ya joe yalla ya joe
