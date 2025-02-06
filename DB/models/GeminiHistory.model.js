@@ -6,11 +6,10 @@ const geminiHistoryModel = model(
     {
       userId: Number,
       sessionId: Number,
-      history: { prompt: String, response: String },
+      history: [{ prompt: String, response: String }],
     },
     { timestamps: { createdAt: true } }
   )
 );
-
 
 export default geminiHistoryModel;

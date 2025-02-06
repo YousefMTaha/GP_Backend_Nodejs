@@ -10,7 +10,7 @@ app.use(express.json());
 app.use("/api/v1/gemini", geminiController);
 
 app.all("*", (req, res) => {
-  return res.send("invalid Method or url");
+  return res.status(404).send("invalid Method or url");
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));

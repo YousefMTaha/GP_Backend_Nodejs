@@ -13,8 +13,10 @@ const __dirname = dirname(__filename);
 let counter = parseInt(fs.readFileSync("./counter.txt", "utf-8"));
 
 async function gemini(prompts) {
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL });
+  const genAI = new GoogleGenerativeAI(
+    "AIzaSyC8gE0hPvsw2jc2HU7vmWZhsCteFc7aUlE"
+  );
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   return (await model.generateContent(prompts)).response;
 }
@@ -60,31 +62,28 @@ export const testGemini = async (req, res) => {
 };
 
 export const Gemini = async (req, res, next) => {
-  do {
-    try {
-      const { sttResult } = req;
-      const { sessionId } = req.body;
+  // do {
+  try {
+    const { sttResult } = req;
+    const { sessionId } = req.body;
 
-      const { fullPrompt, chat } = await checkTheHistory(
-        1,
-        sessionId,
-        sttResult
-      );
+    const { fullPrompt, chat } = await checkTheHistory(1, sessionId, sttResult);
 
-      const modelResult = await gemini(fullPrompt);
+    const modelResult = await gemini(fullPrompt);
 
-      await chat.updateOne({
-        $push: { history: { prompt, response: modelResult.text() } },
-      });
+    await chat.updateOne({
+      $push: { history: { prompt: sttResult, response: modelResult.text() } },
+    });
 
-      console.log("usage: ", modelResult.usageMetadata);
+    console.log("usage: ", modelResult.usageMetadata);
 
-      req.geminiResult = modelResult.text();
-      next();
-    } catch (error) {
-      console.error(error);
-    }
-  } while (true);
+    req.geminiResult = modelResult.text();
+    next();
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.toString() });
+  }
+  // } while (true);
 };
 
 export const integrateWithTTS = async (req, res) => {
@@ -94,7 +93,7 @@ export const integrateWithTTS = async (req, res) => {
     const ttsResult = await axios.post(
       "http://localhost:5003/tts",
       {
-        text: geminiResult,
+        text: geminiResult || "This for test",
       },
       { responseType: "stream" }
     );
@@ -133,7 +132,8 @@ export const integrateWithSTT = async (req, res, next) => {
     formData.append("audio", createReadStream(audioFilePath));
 
     const sttResult = await axios.post("http://localhost:5003/stt", formData);
-    req.sttResult = sttResult;
+
+    req.sttResult = sttResult.data.text;
     next();
   } catch (error) {
     console.log(error);
