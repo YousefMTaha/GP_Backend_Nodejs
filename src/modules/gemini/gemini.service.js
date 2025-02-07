@@ -12,14 +12,7 @@ const __dirname = dirname(__filename);
 
 let counter = parseInt(fs.readFileSync("./counter.txt", "utf-8"));
 
-async function gemini(prompts) {
-  const genAI = new GoogleGenerativeAI(
-    "AIzaSyC8gE0hPvsw2jc2HU7vmWZhsCteFc7aUlE"
-  );
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-  return (await model.generateContent(prompts)).response;
-}
+// async function gemini(prompts) {}
 
 async function checkTheHistory(userId, sessionId, newPrompt) {
   let chat = await geminiHistoryModel.findOne({ userId, sessionId });
@@ -61,24 +54,36 @@ export const testGemini = async (req, res) => {
   } while (true);
 };
 
+// function gemini(userId, sessionId, sttResult) {}
+
 export const Gemini = async (req, res, next) => {
   // do {
   try {
-    const { sttResult } = req;
-    const { sessionId } = req.body;
+    const { sessionId, prompt } = req.body;
+    const genAI = new GoogleGenerativeAI(
+      "AIzaSyC8gE0hPvsw2jc2HU7vmWZhsCteFc7aUlE"
+    );
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const { fullPrompt, chat } = await checkTheHistory(1, sessionId, sttResult);
+    const { fullPrompt, chat } = await checkTheHistory(1, sessionId, prompt);
 
-    const modelResult = await gemini(fullPrompt);
+    const startDate = new Date();
+    console.log(`waiting for Gemini to response at ${startDate}`);
+    const modelResult = (await model.generateContent(fullPrompt)).response;
 
+    const endDate = new Date() - startDate;
+    console.log(`response at ${new Date(endDate)}`);
+    console.log(`took ${endDate / 1000} seconds`);
+    console.log(`=======================================================`);
     await chat.updateOne({
-      $push: { history: { prompt: sttResult, response: modelResult.text() } },
+      $push: {
+        history: { prompt, response: modelResult.text() },
+      },
     });
 
     console.log("usage: ", modelResult.usageMetadata);
 
-    req.geminiResult = modelResult.text();
-    next();
+    return res.json({ data: modelResult.text() });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.toString() });
@@ -88,15 +93,21 @@ export const Gemini = async (req, res, next) => {
 
 export const integrateWithTTS = async (req, res) => {
   try {
-    const { geminiResult } = req;
+    const { text } = req.body;
 
+    const startDate = new Date();
+    console.log(`waiting for TTS to response at ${startDate}`);
     const ttsResult = await axios.post(
       "http://localhost:5003/tts",
       {
-        text: geminiResult || "This for test",
+        text: text || "This for test",
       },
       { responseType: "stream" }
     );
+    const endDate = new Date() - startDate;
+    console.log(`response at ${new Date(endDate)}`);
+    console.log(`took ${endDate / 1000} seconds`);
+    console.log(`=======================================================`);
 
     const audioFolder = __dirname + "/audios";
     if (!fs.existsSync(audioFolder)) {
@@ -108,7 +119,13 @@ export const integrateWithTTS = async (req, res) => {
     const writeStream = fs.createWriteStream(returnedAudioPath);
     fs.writeFileSync("counter.txt", JSON.stringify(++counter));
 
-    ttsResult.data.pipe(writeStream);
+    res.setHeader("Content-Type", "audio/wav");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="tts-audio-${counter}.wav"`
+    );
+
+    ttsResult.data.pipe(res);
 
     writeStream.on("error", (error) => {
       return res.json({ error: error.message });
@@ -131,9 +148,15 @@ export const integrateWithSTT = async (req, res, next) => {
     const formData = new FormData();
     formData.append("audio", createReadStream(audioFilePath));
 
+    const startDate = new Date();
+    console.log(`waiting for STT to response at ${startDate}`);
     const sttResult = await axios.post("http://localhost:5003/stt", formData);
+    const endDate = new Date() - startDate;
+    console.log(`response at ${new Date(endDate)}`);
+    console.log(`took ${endDate / 1000} seconds`);
+    console.log(`=======================================================`);
 
-    req.sttResult = sttResult.data.text;
+    req.body.prompt = sttResult.data.text;
     next();
   } catch (error) {
     console.log(error);

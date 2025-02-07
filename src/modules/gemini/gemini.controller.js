@@ -9,11 +9,13 @@ import {
 const geminiController = Router();
 
 geminiController.post(
-  "/integrate-models",
+  "/voice-text",
   upload.single("audio"),
   integrateWithSTT,
-  Gemini,
-  integrateWithTTS
+  Gemini
 );
+
+geminiController.post("/text-text", Gemini);
+geminiController.post("/text-voice",integrateWithTTS);
 
 export default geminiController;
