@@ -45,7 +45,7 @@ export const testGemini = async (req, res) => {
         $push: { history: { prompt, response: modelResult.text() } },
       });
 
-      console.log("usage: ", modelResult.usageMetadata);
+      // console.log("usage: ", modelResult.usageMetadata);
 
       return res.status(200).json({ result: modelResult.text() });
     } catch (error) {
@@ -56,58 +56,80 @@ export const testGemini = async (req, res) => {
 
 // function gemini(userId, sessionId, sttResult) {}
 
+// export const Gemini = async (req, res, next) => {
+//   // do {
+//   try {
+//     const { sessionId, prompt } = req.body;
+//     const genAI = new GoogleGenerativeAI(
+//       "AIzaSyC8gE0hPvsw2jc2HU7vmWZhsCteFc7aUlE"
+//     );
+//     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+//     // const { fullPrompt, chat } = await checkTheHistory(1, sessionId, prompt);
+
+//     const startDate = new Date();
+//     // console.log(`waiting for Gemini to response at ${startDate}`);
+//     const modelResult = (await model.generateContent(prompt)).response;
+
+//     const endDate = new Date() - startDate;
+//     // console.log(`response at ${new Date(endDate)}`);
+//     // console.log(`took ${endDate / 1000} seconds`);
+//     // console.log(`=======================================================`);
+//     // await chat.updateOne({
+//     //   $push: {
+//     //     history: { prompt, response: modelResult.text() },
+//     //   },
+//     // });
+
+//     // console.log("usage: ", modelResult.usageMetadata);
+
+//     return res.json({ data: modelResult.text() });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ error: error.toString() });
+//   }
+//   // } while (true);
+// };
+
+
 export const Gemini = async (req, res, next) => {
-  // do {
   try {
     const { sessionId, prompt } = req.body;
-    const genAI = new GoogleGenerativeAI(
-      "AIzaSyC8gE0hPvsw2jc2HU7vmWZhsCteFc7aUlE"
-    );
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const { fullPrompt, chat } = await checkTheHistory(1, sessionId, prompt);
-
-    const startDate = new Date();
-    console.log(`waiting for Gemini to response at ${startDate}`);
-    const modelResult = (await model.generateContent(fullPrompt)).response;
-
-    const endDate = new Date() - startDate;
-    console.log(`response at ${new Date(endDate)}`);
-    console.log(`took ${endDate / 1000} seconds`);
-    console.log(`=======================================================`);
-    await chat.updateOne({
-      $push: {
-        history: { prompt, response: modelResult.text() },
+    const modelResult = await axios.post(
+      "https://mahmoud1019.app.n8n.cloud/webhook/68ba2cb8-47fb-4804-970a-1bd2dda53d7d",
+      {
+        chat_id: sessionId,
+        prompt: prompt,
       },
-    });
+    );
 
-    console.log("usage: ", modelResult.usageMetadata);
-
-    return res.json({ data: modelResult.text() });
+    // console.log(modelResult.data.output);
+    return res.json({ data: modelResult.data.output });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.toString() });
   }
-  // } while (true);
 };
+
 
 export const integrateWithTTS = async (req, res) => {
   try {
     const { text } = req.body;
 
     const startDate = new Date();
-    console.log(`waiting for TTS to response at ${startDate}`);
+    // console.log(`waiting for TTS to response at ${startDate}`);
     const ttsResult = await axios.post(
-      "http://localhost:5003/tts",
+      "http://127.0.0.1:5003/tts",
       {
         text: text || "This for test",
       },
       { responseType: "stream" }
     );
     const endDate = new Date() - startDate;
-    console.log(`response at ${new Date(endDate)}`);
-    console.log(`took ${endDate / 1000} seconds`);
-    console.log(`=======================================================`);
+    // console.log(`response at ${new Date(endDate)}`);
+    // console.log(`took ${endDate / 1000} seconds`);
+    // console.log(`=======================================================`);
 
     const audioFolder = __dirname + "/audios";
     if (!fs.existsSync(audioFolder)) {
@@ -135,7 +157,7 @@ export const integrateWithTTS = async (req, res) => {
       return res.json(`File created on this path ${audioFolder}`);
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
 
     return res.json({ error: error.message });
   }
@@ -149,17 +171,18 @@ export const integrateWithSTT = async (req, res, next) => {
     formData.append("audio", createReadStream(audioFilePath));
 
     const startDate = new Date();
-    console.log(`waiting for STT to response at ${startDate}`);
-    const sttResult = await axios.post("http://localhost:5003/stt", formData);
+    // console.log(`waiting for STT to response at ${startDate}`);
+    const sttResult = await axios.post("http://127.0.0.1:5003/stt", formData);
     const endDate = new Date() - startDate;
-    console.log(`response at ${new Date(endDate)}`);
-    console.log(`took ${endDate / 1000} seconds`);
-    console.log(`=======================================================`);
+    // console.log(`response at ${new Date(endDate)}`);
+    // console.log(`took ${endDate / 1000} seconds`);
+    // console.log(`=======================================================`);
 
-    req.body.prompt = sttResult.data.text;
-    next();
+    // req.body.prompt = sttResult.data.text;
+    // next();
+    return res.json({ data: sttResult.data.text });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.json({ error: error.toString() });
   }
 };
