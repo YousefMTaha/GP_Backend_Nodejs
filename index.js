@@ -1,6 +1,6 @@
 import express from "express";
 import connectDB from "./DB/connection.js";
-import geminiController from "./src/modules/Gemini/gemini.controller.js";
+import geminiController from "./src/modules/gemini/gemini.controller.js";
 const app = express();
 const port = 3000;
 
