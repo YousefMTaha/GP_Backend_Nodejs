@@ -12,7 +12,7 @@ geminiController.post(
   "/voice-text",
   upload.single("audio"),
   integrateWithSTT,
-  Gemini
+  // Gemini
 );
 
 geminiController.post("/text-text", Gemini);

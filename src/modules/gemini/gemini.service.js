@@ -12,6 +12,8 @@ const __dirname = dirname(__filename);
 
 let counter = parseInt(fs.readFileSync("./counter.txt", "utf-8"));
 
+const localhost = "192.168.1.5";
+
 // async function gemini(prompts) {}
 
 async function checkTheHistory(userId, sessionId, newPrompt) {
@@ -98,7 +100,7 @@ export const integrateWithTTS = async (req, res) => {
     const startDate = new Date();
     console.log(`waiting for TTS to response at ${startDate}`);
     const ttsResult = await axios.post(
-      "http://localhost:5003/tts",
+      `http://${localhost}:5003/tts`,
       {
         text: text || "This for test",
       },
@@ -150,14 +152,16 @@ export const integrateWithSTT = async (req, res, next) => {
 
     const startDate = new Date();
     console.log(`waiting for STT to response at ${startDate}`);
-    const sttResult = await axios.post("http://localhost:5003/stt", formData);
+    const sttResult = await axios.post(`http://${localhost}:5003/stt`, formData);
     const endDate = new Date() - startDate;
     console.log(`response at ${new Date(endDate)}`);
     console.log(`took ${endDate / 1000} seconds`);
     console.log(`=======================================================`);
 
     req.body.prompt = sttResult.data.text;
-    next();
+    // next();
+    console.log(sttResult.data.text)
+    return res.json({ data: sttResult.data.text });
   } catch (error) {
     console.log(error);
     return res.json({ error: error.toString() });
